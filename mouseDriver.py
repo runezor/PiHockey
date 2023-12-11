@@ -1,36 +1,40 @@
-import pyautogui
-from pynput.mouse import Listener
 import threading
+import struct
 
 class MouseDriver:
-    def __init__(self, window_w, window_h, on_mouse_pressed):
-        self.window_x = 0
-        self.window_y = 0
+    def __init__(self, input_file, spd, on_mouse_pressed, rev_x = False, rev_y = False):
+        self.mouse_x = 0.5
+        self.mouse_y = 0.5
 
-        self.window_w = window_w
-        self.window_h = window_h
+        def read_mouse():
+            global mouse_x, mouse_y
+            try:
+                with open(input_file, 'rb') as f:
+                    while True:
+                        data = f.read(3)
+                        button, x_move, y_move = struct.unpack('3b', data)
+                        if rev_x:
+                            self.mouse_x -= x_move * spd
+                        else:
+                            self.mouse_x += x_move * spd
+                        if rev_y:
+                            self.mouse_y -= y_move * spd
+                        else:
+                            self.mouse_y += y_move * spd
+                        if button%2==1:
+                            on_mouse_pressed()
+                        self.mouse_x = min(max(0,self.mouse_x),1)
+                        self.mouse_y = min(max(0,self.mouse_y),1)
+            except FileNotFoundError:
+                print("Mouse device not found")
+            except PermissionError:
+                print("Permission denied: Try running as root")
 
-        def on_click(x, y, button, pressed):
-            if pressed:
-                on_mouse_pressed()
+        mouse_thread = threading.Thread(target=read_mouse)
+        mouse_thread.daemon = True  # This makes the thread exit when the main program exits
+        mouse_thread.start()
 
-        def start_listener():
-            with Listener(on_click=on_click) as listener:
-                listener.join()
 
-        listener_thread = threading.Thread(target=start_listener)
-        listener_thread.start()
 
     def get(self):
-        mouse_x, mouse_y = pyautogui.position()
-        # Update window
-        if mouse_x<self.window_x:
-            self.window_x = mouse_x
-        if mouse_x>self.window_x+self.window_w:
-            self.window_x = mouse_x-self.window_w
-        if mouse_y<self.window_y:
-            self.window_y = mouse_y
-        if mouse_y>self.window_y+self.window_h:
-            self.window_y = mouse_y-self.window_h
-
-        return (mouse_x-self.window_x)/self.window_w, (mouse_y-self.window_y)/self.window_h
+        return self.mouse_x, self.mouse_y
