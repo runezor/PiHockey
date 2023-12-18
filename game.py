@@ -1,5 +1,6 @@
 import math
 import pygame
+import random
 from backgrounds import StarBackground, FireBackground, FabricBackground, StartBackground, EndBackground
 from enum import Enum
 
@@ -54,9 +55,9 @@ class Game:
         self.bat2_timeout = 0
 
         self.ball_x = 0
-        self.ball_y = 32
-        self.ball_v_x = 20
-        self.ball_v_y = -30
+        self.ball_y = 0
+        self.ball_v_x = 0
+        self.ball_v_y = 0
 
         self.player1_score = 0
         self.player2_score = 0
@@ -124,17 +125,16 @@ class Game:
         else:
             return None
 
-    def transition_playing(self):
-        self.ball_x = 16
-        self.ball_y = 32
-        self.ball_v_x = 20
-        self.ball_v_y = 20
+    def transition_playing(self, kickoff = True):
+        if kickoff:
+            self.ball_x = 0
+            self.ball_y = 32
+            self.ball_v_x = 20 * random.choice([-1, 1])
+            self.ball_v_y = -30 * random.choice([-1, 1])
 
         self.state = GameState.PLAYING
 
     def transition_score_pause(self, score_pause_t):
-        self.ball_x = 16
-        self.ball_y = 32
         self.score_pause_t = score_pause_t
 
         self.state = GameState.SCORE_PAUSE
@@ -257,6 +257,11 @@ class Game:
 
         if self.ball_y<-BALL_R:
             self.player2_score += 1
+            self.ball_x = 16
+            self.ball_y = 16
+            self.ball_v_x = 0
+            self.ball_v_y = 0
+
             if self.player2_score<END_SCORE:
                 self.transition_score_pause(5)
             else:
@@ -264,6 +269,11 @@ class Game:
 
         if self.ball_y>ROOM_H+BALL_R:
             self.player1_score += 1
+            self.ball_x = 16
+            self.ball_y = 64-16
+            self.ball_v_x = 0
+            self.ball_v_y = 0
+
             if self.player1_score<END_SCORE:
                 self.transition_score_pause(5)
             else:
@@ -301,7 +311,7 @@ class Game:
 
         self.score_pause_t -= time_delta
         if self.score_pause_t<=0:
-            self.transition_playing()
+            self.transition_playing(kickoff=(self.player1_score==0 and self.player2_score==0))
 
     def step_game_start(self, bat1_x, bat1_y, bat2_x, bat2_y, time_delta):
         self.background.update(time_delta)
