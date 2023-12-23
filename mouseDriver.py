@@ -5,6 +5,7 @@ class MouseDriver:
     def __init__(self, input_file, spd, on_mouse_pressed, rev_x = False, rev_y = False):
         self.mouse_x = 0.5
         self.mouse_y = 0.5
+        self.mouse_down = False
 
         def read_mouse():
             global mouse_x, mouse_y
@@ -22,7 +23,11 @@ class MouseDriver:
                         else:
                             self.mouse_y += y_move * spd
                         if button%2==1:
-                            on_mouse_pressed()
+                            if not self.mouse_down:
+                                on_mouse_pressed()
+                            self.mouse_down = True
+                        else:
+                            self.mouse_down = False
                         self.mouse_x = min(max(0,self.mouse_x),1)
                         self.mouse_y = min(max(0,self.mouse_y),1)
             except FileNotFoundError:

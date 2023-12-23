@@ -14,7 +14,7 @@ class StarBackground:
             self.y += math.sin(self.dir) * self.spd * time_delta
 
         def get_coords(self):
-            return int(self.x), int(self.y)
+            return int(self.x+0.5), int(self.y+0.5)
 
     def  __init__(self, width, height, dispersion = 4, spd = 20):
         self.w = width
@@ -31,7 +31,7 @@ class StarBackground:
         self.t += time_delta
         for star in self.stars:
             star.update(time_delta)
-        self.stars = [star for star in self.stars if star.x>0 and star.x<self.w and star.y>0 and star.y<self.h]
+        self.stars = [star for star in self.stars if star.get_coords()[0]>0 and star.get_coords()[0]<self.w and star.get_coords()[1]>0 and star.get_coords()[1]<self.h]
 
         x_center = self.w // 2
         y_center = self.h // 2
@@ -223,6 +223,15 @@ class StartBackground:
     def render(self):
         self.pixels = [[(0,0,0) for x in range(self.w)] for y in range(self.h)]
 
+        for y in range(0, 20):
+            for x in range(0,self.w):
+                if x < self.w / 3:
+                    self.pixels[y][x] = (0,255,0)
+                elif x < self.w / 3 * 2:
+                    self.pixels[y][x] = (255,160,0)
+                else:
+                    self.pixels[y][x] = (255,0,0)
+
         self.draw_lines(self.t*self.rot_spd, self.line_sep, (self.t*self.line_spd/self.line_sep)%1)
         self.draw_lines(self.t*self.rot_spd+math.pi, self.line_sep, (self.t*self.line_spd/self.line_sep)%1)
 
@@ -277,3 +286,64 @@ class EndBackground:
         self.circles = [c for c in self.circles if c.r<self.circle_max_r]
         pixels = [[self.get_point_colour(x,y) for x in range(self.w)] for y in range(self.h)]
         return pixels
+
+class Star2Background:
+    class Star:
+        def __init__(self, x, y, dir, spd, c):
+            self.x = x
+            self.y = y
+            self.spd = spd
+            self.dir = dir / 180 * math.pi
+            self.c = c
+
+            self.offset1 = random.randint(0,1000)
+            self.offset2 = random.randint(0,1000)
+            self.offset3 = random.randint(0,1000)
+
+        def update(self, time_delta):
+            self.x += math.cos(self.dir) * self.spd * time_delta
+            self.y += math.sin(self.dir) * self.spd * time_delta
+
+        def get_coords(self):
+            return int(self.x+0.5), int(self.y+0.5)
+
+        def wave_colour(self, offset, damp, t):
+            return int((math.sin((t + offset) / damp) + 1) / 2.0 * 255)
+
+        def get_colour(self, t):
+            damp = 0.05
+            return (self.wave_colour(self.offset1, damp, t),self.wave_colour(self.offset2, damp, t),self.wave_colour(self.offset3, damp, t))
+
+    def  __init__(self, width, height, freq = 0.2, spd = 30):
+        self.w = width
+        self.h = height
+        self.t = 0
+        self.next_t = 0
+        self.freq = freq
+        self.spd = spd
+
+        self.pixels = [[(0,0,0) for x in range(self.w)] for y in range(self.h)]
+        self.stars = []
+
+    def update(self, time_delta):
+        self.t += time_delta
+        for star in self.stars:
+            star.update(time_delta)
+        self.stars = [star for star in self.stars if star.get_coords()[0]>0 and star.get_coords()[0]<self.w and star.get_coords()[1]>0 and star.get_coords()[1]<self.h]
+
+
+        if self.next_t<self.t:
+            x = random.randint(0,self.w-1)
+            y = random.randint(0,self.h-1)
+            c = (255,255,0)
+            for i in range(0, 360, 45):
+                self.stars += [Star2Background.Star(x,y, i, self.spd,c)]
+
+            self.next_t = self.t + self.freq
+
+    def render(self):
+        self.pixels = [[(0,0,0) for x in range(self.w)] for y in range(self.h)]
+        for star in self.stars:
+            x, y = star.get_coords()
+            self.pixels[y][x] = star.get_colour(self.t)
+        return self.pixels

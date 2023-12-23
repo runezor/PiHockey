@@ -39,10 +39,14 @@ class Renderer:
         # Clear
         background = game.background.render()
 
-        for y in range(ROOM_H):
-            for x in range(ROOM_W):
-                self.set_pixel(x, y, (0,0,0))
-                self.set_pixel(x, y, background[y][x])
+        if game.state != GameState.SCORE_PAUSE:
+            for y in range(ROOM_H):
+                for x in range(ROOM_W):
+                    self.set_pixel(x, y, background[y][x])
+        else:
+            for y in range(ROOM_H):
+                for x in range(ROOM_W):
+                    self.set_pixel(x, y, game.background_pause_c)
 
         if game.state != GameState.GAME_OVER or game.player1_score>game.player2_score:
             c = (0,0,255) if game.bat1_timeout == 0 else (255,255,0)
