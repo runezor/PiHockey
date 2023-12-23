@@ -167,7 +167,7 @@ class Game:
             self.background = FireBackground(ROOM_W, ROOM_H)
         else:
             self.set_excitement(GameExcitement.HIGH)
-            self.background = FabricBackground(self, ROOM_W, ROOM_H)
+            self.background = Star2Background(self, ROOM_W, ROOM_H)
 
     def step_playing(self, bat1_x, bat1_y, bat2_x, bat2_y, time_delta):
         self.background.update(time_delta)
