@@ -169,7 +169,7 @@ class Game:
             self.background = FireBackground(ROOM_W, ROOM_H)
         else:
             self.set_excitement(GameExcitement.HIGH)
-            self.background = Star2Background(self, ROOM_W, ROOM_H)
+            self.background = Star2Background(ROOM_W, ROOM_H)
 
     def step_playing(self, bat1_x, bat1_y, bat2_x, bat2_y, time_delta):
         self.background.update(time_delta)
@@ -357,7 +357,7 @@ class Game:
         self.player1_score = 0
         self.player2_score = 0
         self.state = GameState.GAME_START
-        self.background = StarBackground(ROOM_W, ROOM_H)
+        self.background = StartBackground(ROOM_W, ROOM_H)
 
     def step_update_bats(self, bat1_x, bat1_y, bat2_x, bat2_y, time_delta):
         bat1_vel_x = (bat1_x - self.bat1_x) / time_delta
