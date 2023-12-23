@@ -41,13 +41,16 @@ class Renderer:
 
         for y in range(ROOM_H):
             for x in range(ROOM_W):
+                self.set_pixel(x, y, (0,0,0))
                 self.set_pixel(x, y, background[y][x])
 
         if game.state != GameState.GAME_OVER or game.player1_score>game.player2_score:
-            self.draw_sphere(game.bat1_x,game.bat1_y,BAT_R, (0,0,255))
+            c = (0,0,255) if game.bat1_timeout == 0 else (255,255,0)
+            self.draw_sphere(game.bat1_x,game.bat1_y,BAT_R, c)
 
         if game.state != GameState.GAME_OVER or game.player2_score > game.player1_score:
-            self.draw_sphere(game.bat2_x,game.bat2_y,BAT_R, (255,0,0))
+            c = (255,0,0) if game.bat2_timeout == 0 else (255,255,0)
+            self.draw_sphere(game.bat2_x,game.bat2_y,BAT_R, c)
 
         self.draw_sphere(game.ball_x,game.ball_y,BALL_R, (255,255,255))
 

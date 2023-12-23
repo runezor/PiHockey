@@ -11,7 +11,9 @@ BAT_MAX_V = 640
 BALL_MAX_V = 80
 
 BAT_R = 3
-BALL_R = 2
+BALL_R = 3
+
+TIMEOUT_T = 0.5
 
 ROOM_W = 32
 ROOM_H = 64
@@ -178,7 +180,7 @@ class Game:
         t_bat1 = self.get_t_of_ball_collision(self.ball_x, self.ball_y, self.ball_v_x, self.ball_v_y, self.bat1_x, self.bat1_y, bat1_vel_x, bat1_vel_y, BAT_R + BALL_R)
         t_bat2 = self.get_t_of_ball_collision(self.ball_x, self.ball_y, self.ball_v_x, self.ball_v_y, self.bat2_x, self.bat2_y, bat2_vel_x, bat2_vel_y, BAT_R + BALL_R)
 
-        if t_bat1 and t_bat1<time_delta:
+        if t_bat1 and t_bat1<time_delta and self.bat1_timeout == 0:
             pygame.mixer.Sound.play(crash_sound)
             # First set ball collision to colliding point
             t = t_bat1
@@ -210,7 +212,7 @@ class Game:
             # Now move ball the remaining part
             self.ball_x += self.ball_v_x * (time_delta-t)
             self.ball_y += self.ball_v_y * (time_delta-t)
-        elif t_bat2 and t_bat2<time_delta:
+        elif t_bat2 and t_bat2<time_delta and self.bat2_timeout == 0:
             pygame.mixer.Sound.play(crash_sound)
             # First set ball collision to colliding point
             t = t_bat2
@@ -243,10 +245,6 @@ class Game:
             self.ball_x += self.ball_v_x * (time_delta-t)
             self.ball_y += self.ball_v_y * (time_delta-t)
         else:
-            # Move ball and check for wall
-            if self.is_ball_outside_room():
-                self.ball_v_x = -self.ball_v_x
-
             self.ball_x, self.ball_y = self.compute_new_ball_position(time_delta)
 
         self.bat1_x += bat1_vel_x * time_delta
@@ -254,6 +252,54 @@ class Game:
 
         self.bat2_x += bat2_vel_x * time_delta
         self.bat2_y += bat2_vel_y * time_delta
+
+        # Push from bats
+        if self.does_ball_collide_bat1() and self.bat1_timeout == 0:
+            v_x = self.ball_x -self.bat1_x
+            v_y = self.ball_y -self.bat1_y
+            if v_x == 0 and v_y == 0:
+                v_y = 1
+            else:
+                l = math.sqrt(v_x**2+v_y**2)
+                v_x = v_x / l
+                v_y = v_y / l
+            self.ball_x += v_x * (BAT_R+BALL_R+0.01)
+            self.ball_y += v_y * (BAT_R+BALL_R+0.01)
+            self.ball_v_x = v_x / time_delta
+            self.ball_v_y = v_y / time_delta
+        else:
+            self.bat1_timeout = max(0,self.bat1_timeout-time_delta)
+
+        if self.does_ball_collide_bat2() and self.bat2_timeout == 0:
+            v_x = self.ball_x -self.bat2_x
+            v_y = self.ball_y -self.bat2_y
+            if v_x == 0 and v_y == 0:
+                v_y = 1
+            else:
+                l = math.sqrt(v_x**2+v_y**2)
+                v_x = v_x / l
+                v_y = v_y / l
+            self.ball_x += v_x * (BAT_R+BALL_R+0.01)
+            self.ball_y += v_y * (BAT_R+BALL_R+0.01)
+            self.ball_v_x = v_x / time_delta
+            self.ball_v_y = v_y / time_delta
+        else:
+            self.bat2_timeout = max(0,self.bat2_timeout-time_delta)
+
+        # Wall correct
+        # Move ball and check for wall
+        if self.ball_x<BALL_R:
+            self.ball_x = BALL_R
+            self.ball_v_x = -self.ball_v_x
+        if self.ball_x>ROOM_W-BALL_R:
+            self.ball_x = ROOM_W-BALL_R
+            self.ball_v_x = -self.ball_v_x
+
+        # If still colliding, set timeout
+        if self.does_ball_collide_bat1():
+            self.bat1_timeout = TIMEOUT_T
+        if self.does_ball_collide_bat2():
+            self.bat2_timeout = TIMEOUT_T
 
         if self.ball_y<-BALL_R:
             self.player2_score += 1
@@ -263,8 +309,9 @@ class Game:
             self.ball_v_y = 0
 
             if self.player2_score<END_SCORE:
-                self.transition_score_pause(5)
+                self.transition_score_pause(1)
             else:
+                self.ball_x = 1000
                 self.transition_game_over(False)
 
         if self.ball_y>ROOM_H+BALL_R:
@@ -275,8 +322,9 @@ class Game:
             self.ball_v_y = 0
 
             if self.player1_score<END_SCORE:
-                self.transition_score_pause(5)
+                self.transition_score_pause(1)
             else:
+                self.ball_x = 1000
                 self.transition_game_over(True)
 
     def transition_game_over(self, player1_won):

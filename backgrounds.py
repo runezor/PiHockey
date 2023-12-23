@@ -117,7 +117,7 @@ class FireBackground:
 
 
 class FabricBackground:
-    def  __init__(self, game, width, height, dispersion = 300, spd = 30, fade_in_t = 2):
+    def  __init__(self, game, width, height, dispersion = 300, spd = 30, fade_in_t = 2, interleave_fac = 4):
         self.w = width
         self.h = height
         self.t = 0
@@ -125,17 +125,20 @@ class FabricBackground:
         self.dispersion = dispersion
         self.spd = spd
 
+        self.interleave_fac = interleave_fac
+
+
         self.pixels = [[(0,0,0) for x in range(self.w)] for y in range(self.h)]
         self.t_off = random.randint(0,1000)
         self.fade_in_t = fade_in_t
         self.game = game
 
 
-    def wave_colour(self, offset, damp):
-        fade_in = 1-max((self.fade_in_t-self.t)/self.fade_in_t,0)
-        return int((math.sin((self.t+self.t_off+offset)/damp)+1)/2.0*200*fade_in)
+    def wave_colour(self, offset, damp, t):
+        fade_in = 1-max((self.fade_in_t-t)/self.fade_in_t,0)
+        return int((math.sin((t+self.t_off+offset)/damp)+1)/2.0*160*fade_in)
 
-    def get_point_colour(self, x, y):
+    def get_point_colour(self, x, y, t):
         player1_x = self.game.bat1_x
         player1_y = self.game.bat1_y
         player2_x = self.game.bat2_x
@@ -154,14 +157,17 @@ class FabricBackground:
         g_damp = 0.08*2
         b_damp = 0.16*2
 
-        return (self.wave_colour(r_offset, r_damp),self.wave_colour(g_offset, g_damp),self.wave_colour(b_offset, b_damp))
+        return (self.wave_colour(r_offset, r_damp, t),self.wave_colour(g_offset, g_damp, t),self.wave_colour(b_offset, b_damp, t))
 
 
     def update(self, time_delta):
         self.t += time_delta
 
     def render(self):
-        self.pixels = [[self.get_point_colour(x,y) for x in range(self.w)] for y in range(self.h)]
+        for j in range(0,self.w*self.h//self.interleave_fac):
+            x = random.randint(0, self.w-1)
+            y = random.randint(0, self.h-1)
+            self.pixels[y][x] = self.get_point_colour(x,y,self.t)
 
         return self.pixels
 
