@@ -25,7 +25,22 @@ END_SCORE = 10
 
 pygame.init()
 pygame.mixer.init()
-crash_sound = pygame.mixer.Sound("clang.wav")
+crash_sound = pygame.mixer.Sound("sounds/clang.wav")
+start_sound = pygame.mixer.Sound("sounds/prepare_to_fight.wav")
+explosion_sound = pygame.mixer.Sound("sounds/explosion.wav")
+
+taunt_sounds = [pygame.mixer.Sound("sounds/accuracy.wav"),
+                pygame.mixer.Sound("sounds/humiliation.wav"),
+                pygame.mixer.Sound("sounds/impressive.wav"),
+                pygame.mixer.Sound("sounds/perfect.wav"),
+                pygame.mixer.Sound("sounds/sudden_death.wav")]
+
+blue_lead_sounds = [pygame.mixer.Sound("sounds/blue_leads.wav")]
+
+red_lead_sounds = [pygame.mixer.Sound("sounds/red_leads.wav")]
+
+tied_sounds = [pygame.mixer.Sound("sounds/teams_are_tied.wav"),
+                pygame.mixer.Sound("sounds/you_are_tied_for_the_lead.wav")]
 
 def sign(x):
     return -1 if x<0 else 1
@@ -144,6 +159,8 @@ class Game:
     def transition_score_pause(self, score_pause_t):
         # If transitioning from start phase, select difficulty
         if self.state == GameState.GAME_START:
+            pygame.mixer.Sound.play(start_sound)
+            # Play start sound
             if self.bat1_x<ROOM_W/3:
                 self.ball_max_v = BALL_MAX_V_EASY
                 self.background_pause_c = (0, 200, 0)
@@ -170,6 +187,16 @@ class Game:
         else:
             self.set_excitement(GameExcitement.HIGH)
             self.background = Star2Background(ROOM_W, ROOM_H)
+
+    def play_taunt_sound(self):
+        if self.player1_score == self.player2_score + 1:
+            pygame.mixer.Sound.play(random.choice(blue_lead_sounds))
+        elif self.player2_score == self.player1_score + 1:
+            pygame.mixer.Sound.play(random.choice(red_lead_sounds))
+        elif self.player1_score == self.player2_score:
+            pygame.mixer.Sound.play(random.choice(tied_sounds))
+        else:
+            pygame.mixer.Sound.play(random.choice(taunt_sounds))
 
     def step_playing(self, bat1_x, bat1_y, bat2_x, bat2_y, time_delta):
         self.background.update(time_delta)
@@ -327,6 +354,8 @@ class Game:
             self.ball_v_x = 0
             self.ball_v_y = 0
 
+            self.play_taunt_sound()
+
             if self.player2_score<END_SCORE:
                 self.transition_score_pause(1)
             else:
@@ -340,6 +369,8 @@ class Game:
             self.ball_v_x = 0
             self.ball_v_y = 0
 
+            self.play_taunt_sound()
+
             if self.player1_score<END_SCORE:
                 self.transition_score_pause(1)
             else:
@@ -348,6 +379,8 @@ class Game:
 
     def transition_game_over(self, player1_won):
         self.state = GameState.GAME_OVER
+        self.set_excitement(GameExcitement.LOW)
+        pygame.mixer.Sound.play(explosion_sound)
         if player1_won:
             self.background = EndBackground(ROOM_W, ROOM_H, self.bat2_x, self.bat2_y)
         else:
