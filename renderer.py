@@ -39,9 +39,15 @@ class Renderer:
         # Clear
         background = game.background.render()
 
-        for y in range(ROOM_H):
-            for x in range(ROOM_W):
-                self.set_pixel(x, y, background[y][x])
+        if game.state != GameState.SCORE_PAUSE:
+            for y in range(ROOM_H):
+                for x in range(ROOM_W):
+                    self.set_pixel(x, y, background[y][x])
+        else:
+            for y in range(ROOM_H):
+                for x in range(ROOM_W):
+                    self.set_pixel(x, y, game.background_pause_c)
+
 
         if game.state != GameState.GAME_OVER or game.player1_score>game.player2_score:
             self.draw_sphere(game.bat1_x,game.bat1_y,BAT_R, (0,0,255))

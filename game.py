@@ -1,14 +1,17 @@
 import math
 import pygame
 import random
-from backgrounds import StarBackground, FireBackground, FabricBackground, StartBackground, EndBackground
+from backgrounds import StarBackground, FireBackground, FabricBackground, StartBackground, EndBackground, Star2Background
 from enum import Enum
 
 BAT_W = 4
 BAT_H = 4
 
 BAT_MAX_V = 640
-BALL_MAX_V = 80
+
+BALL_MAX_V_EASY = 60
+BALL_MAX_V_MEDIUM = 90
+BALL_MAX_V_HARD = 100
 
 BAT_R = 3
 BALL_R = 2
@@ -64,6 +67,8 @@ class Game:
 
         self.excitement = None
         self.set_excitement(GameExcitement.LOW)
+
+        self.background_pause_c = (0,0,0)
 
         self.particles = []
 
@@ -135,6 +140,20 @@ class Game:
         self.state = GameState.PLAYING
 
     def transition_score_pause(self, score_pause_t):
+        # If transitioning from start phase, select difficulty
+        if self.state == GameState.GAME_START:
+            if self.bat1_x<ROOM_W/3:
+                self.ball_max_v = BALL_MAX_V_EASY
+                self.background_pause_c = (0, 200, 0)
+            elif self.bat1_x<ROOM_W/3*2:
+                self.ball_max_v = BALL_MAX_V_MEDIUM
+                self.background_pause_c = (200, 120, 0)
+            else:
+                self.ball_max_v = BALL_MAX_V_HARD
+                self.background_pause_c = (200, 0, 0)
+        else:
+            self.background_pause_c = (0, 0, 0)
+
         self.score_pause_t = score_pause_t
 
         self.state = GameState.SCORE_PAUSE
@@ -171,9 +190,9 @@ class Game:
             bat2_vel_y = bat2_vel_y * (BAT_MAX_V/bat2_speed)
 
         vl = math.sqrt(self.ball_v_x**2 + self.ball_v_y**2)
-        if vl>BALL_MAX_V:
-            self.ball_v_x = self.ball_v_x * BALL_MAX_V/vl
-            self.ball_v_y = self.ball_v_y * BALL_MAX_V/vl
+        if vl>self.ball_max_v:
+            self.ball_v_x = self.ball_v_x * self.ball_max_v/vl
+            self.ball_v_y = self.ball_v_y * self.ball_max_v/vl
 
         t_bat1 = self.get_t_of_ball_collision(self.ball_x, self.ball_y, self.ball_v_x, self.ball_v_y, self.bat1_x, self.bat1_y, bat1_vel_x, bat1_vel_y, BAT_R + BALL_R)
         t_bat2 = self.get_t_of_ball_collision(self.ball_x, self.ball_y, self.ball_v_x, self.ball_v_y, self.bat2_x, self.bat2_y, bat2_vel_x, bat2_vel_y, BAT_R + BALL_R)
@@ -290,7 +309,7 @@ class Game:
         self.player1_score = 0
         self.player2_score = 0
         self.state = GameState.GAME_START
-        self.background = StartBackground(ROOM_W, ROOM_H)
+        self.background = StarBackground(ROOM_W, ROOM_H)
 
     def step_update_bats(self, bat1_x, bat1_y, bat2_x, bat2_y, time_delta):
         bat1_vel_x = (bat1_x - self.bat1_x) / time_delta
