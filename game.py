@@ -157,6 +157,9 @@ class Game:
         self.state = GameState.PLAYING
 
     def transition_score_pause(self, score_pause_t):
+        self.bat1_timeout = 0
+        self.bat2_timeout = 0
+
         # If transitioning from start phase, select difficulty
         if self.state == GameState.GAME_START:
             pygame.mixer.Sound.play(start_sound)
@@ -200,6 +203,9 @@ class Game:
 
     def step_playing(self, bat1_x, bat1_y, bat2_x, bat2_y, time_delta):
         self.background.update(time_delta)
+
+        self.bat1_timeout = max(0,self.bat1_timeout-time_delta)
+        self.bat2_timeout = max(0,self.bat2_timeout-time_delta)
 
         bat1_vel_x = (bat1_x - self.bat1_x) / time_delta
         bat1_vel_y = (bat1_y - self.bat1_y) / time_delta
@@ -313,8 +319,6 @@ class Game:
             self.ball_y += v_y * (BAT_R+BALL_R+0.01)
             self.ball_v_x = v_x / time_delta
             self.ball_v_y = v_y / time_delta
-        else:
-            self.bat1_timeout = max(0,self.bat1_timeout-time_delta)
 
         if self.does_ball_collide_bat2() and self.bat2_timeout == 0:
             v_x = self.ball_x -self.bat2_x
@@ -329,8 +333,6 @@ class Game:
             self.ball_y += v_y * (BAT_R+BALL_R+0.01)
             self.ball_v_x = v_x / time_delta
             self.ball_v_y = v_y / time_delta
-        else:
-            self.bat2_timeout = max(0,self.bat2_timeout-time_delta)
 
         # Wall correct
         # Move ball and check for wall
@@ -378,6 +380,9 @@ class Game:
                 self.transition_game_over(True)
 
     def transition_game_over(self, player1_won):
+        self.bat1_timeout = 0
+        self.bat2_timeout = 0
+
         self.state = GameState.GAME_OVER
         self.set_excitement(GameExcitement.LOW)
         pygame.mixer.Sound.play(explosion_sound)
@@ -387,6 +392,9 @@ class Game:
             self.background = EndBackground(ROOM_W, ROOM_H, self.bat1_x, self.bat1_y)
 
     def transition_game_start(self):
+        self.bat1_timeout = 0
+        self.bat2_timeout = 0
+
         self.player1_score = 0
         self.player2_score = 0
         self.state = GameState.GAME_START

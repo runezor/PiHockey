@@ -12,6 +12,9 @@ screenDriver = ScreenDriver(renderer)
 
 time_delta = 1/60
 
+y_span = 25
+sensitivity_x = 0.00015
+sensitivity_y = sensitivity_x * (ROOM_W/y_span)
 
 def on_mouse_pressed():
     if game.state == GameState.GAME_START:
@@ -19,8 +22,8 @@ def on_mouse_pressed():
     if game.state == GameState.GAME_OVER:
         game.transition_game_start()
 
-mouse1 = MouseDriver('/dev/input/mouse1',0.001,on_mouse_pressed, rev_x = True)
-mouse2 = MouseDriver('/dev/input/mouse0',0.001,on_mouse_pressed, rev_y = True)
+mouse1 = MouseDriver('/dev/input/mouse1',sensitivity_x,sensitivity_y,on_mouse_pressed, rev_x = True)
+mouse2 = MouseDriver('/dev/input/mouse0',sensitivity_x,sensitivity_y,on_mouse_pressed, rev_y = True)
 
 while True:
     start = time.time()
@@ -28,7 +31,7 @@ while True:
     cor2_x, cor2_y = mouse2.get()
 
     #game.step(cor1_x*(ROOM_W-BAT_W), cor1_y*(20-BAT_H), game.ball_x, 59, time_delta)
-    game.step(cor1_x*(ROOM_W-BAT_W), cor1_y*(20-BAT_H), cor2_x*(ROOM_W-BAT_W), ROOM_H-20+cor2_y*(20-BAT_H), time_delta)
+    game.step(cor1_x*(ROOM_W), cor1_y*y_span, cor2_x*(ROOM_W), ROOM_H-y_span+cor2_y*y_span, time_delta)
     game_t = time.time()
 
     renderer.render(game)
