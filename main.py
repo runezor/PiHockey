@@ -12,7 +12,7 @@ screenDriver = ScreenDriver(renderer)
 
 time_delta = 1/60
 
-y_span = 25
+y_span = 30
 sensitivity_x = 0.00015
 sensitivity_y = sensitivity_x * (ROOM_W/y_span)
 

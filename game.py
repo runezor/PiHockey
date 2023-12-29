@@ -9,9 +9,11 @@ BAT_H = 4
 
 BAT_MAX_V = 640
 
-BALL_MAX_V_EASY = 60
+BALL_MAX_V_EASY = 70
 BALL_MAX_V_MEDIUM = 90
 BALL_MAX_V_HARD = 100
+
+FRICTION = 40
 
 BAT_R = 3
 BALL_R = 3.5
@@ -215,7 +217,6 @@ class Game:
 
         bat1_speed = math.sqrt(bat1_vel_x**2+bat1_vel_y**2)
         bat2_speed = math.sqrt(bat2_vel_x**2+bat2_vel_y**2)
-
         if bat1_speed>BAT_MAX_V:
             bat1_vel_x = bat1_vel_x * (BAT_MAX_V/bat1_speed)
             bat1_vel_y = bat1_vel_y * (BAT_MAX_V/bat1_speed)
@@ -225,9 +226,14 @@ class Game:
             bat2_vel_y = bat2_vel_y * (BAT_MAX_V/bat2_speed)
 
         vl = math.sqrt(self.ball_v_x**2 + self.ball_v_y**2)
-        if vl>self.ball_max_v:
-            self.ball_v_x = self.ball_v_x * self.ball_max_v/vl
-            self.ball_v_y = self.ball_v_y * self.ball_max_v/vl
+        ball_new_v = min(vl-FRICTION*time_delta, self.ball_max_v)
+
+        if ball_new_v>0:
+            self.ball_v_x = self.ball_v_x * ball_new_v/vl
+            self.ball_v_y = self.ball_v_y * ball_new_v/vl
+        else:
+            self.ball_v_x = 0
+            self.ball_v_y = 0
 
         t_bat1 = self.get_t_of_ball_collision(self.ball_x, self.ball_y, self.ball_v_x, self.ball_v_y, self.bat1_x, self.bat1_y, bat1_vel_x, bat1_vel_y, BAT_R + BALL_R)
         t_bat2 = self.get_t_of_ball_collision(self.ball_x, self.ball_y, self.ball_v_x, self.ball_v_y, self.bat2_x, self.bat2_y, bat2_vel_x, bat2_vel_y, BAT_R + BALL_R)
