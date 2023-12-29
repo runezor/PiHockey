@@ -23,15 +23,18 @@ def on_mouse_pressed():
         game.transition_game_start()
 
 mouse1 = MouseDriver('/dev/input/mouse1',sensitivity_x,sensitivity_y,on_mouse_pressed, rev_x = True)
-mouse2 = MouseDriver('/dev/input/mouse0',sensitivity_x,sensitivity_y,on_mouse_pressed, rev_y = True)
+mouse2 = MouseDriver('/dev/input/mouse2',sensitivity_x,sensitivity_y,on_mouse_pressed, rev_y = True)
 
 while True:
     start = time.time()
     cor1_x, cor1_y = mouse1.get()
     cor2_x, cor2_y = mouse2.get()
+    game.step(cor1_x*(ROOM_W), cor1_y*y_span, cor2_x*(ROOM_W), ROOM_H-y_span+cor2_y*y_span, time_delta/2)
 
-    #game.step(cor1_x*(ROOM_W-BAT_W), cor1_y*(20-BAT_H), game.ball_x, 59, time_delta)
-    game.step(cor1_x*(ROOM_W), cor1_y*y_span, cor2_x*(ROOM_W), ROOM_H-y_span+cor2_y*y_span, time_delta)
+    cor1_x, cor1_y = mouse1.get()
+    cor2_x, cor2_y = mouse2.get()
+    game.step(cor1_x*(ROOM_W), cor1_y*y_span, cor2_x*(ROOM_W), ROOM_H-y_span+cor2_y*y_span, time_delta/2)
+
     game_t = time.time()
 
     renderer.render(game)

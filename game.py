@@ -14,7 +14,7 @@ BALL_MAX_V_MEDIUM = 90
 BALL_MAX_V_HARD = 100
 
 BAT_R = 3
-BALL_R = 3
+BALL_R = 3.5
 
 TIMEOUT_T = 0.5
 
@@ -240,26 +240,26 @@ class Game:
             self.ball_x += self.ball_v_x * t
             self.ball_y += self.ball_v_y * t
 
-            # Update its velocity (also based on puck position at t)
-            tv_x = (self.bat1_y+bat1_vel_y*t-self.ball_y)
-            tv_y = -(self.bat1_x+bat1_vel_x*t-self.ball_x)
+            bat1_col_x = self.bat1_x + bat1_vel_x*t
+            bat1_col_y = self.bat1_y + bat1_vel_y*t
 
-            tvn_x = tv_x / math.sqrt(tv_x**2+tv_y**2)
-            tvn_y = tv_y / math.sqrt(tv_x**2+tv_y**2)
+            n_x = self.ball_x - bat1_col_x
+            n_y = self.ball_y - bat1_col_y
 
-            rv_x = bat1_vel_x - self.ball_v_x
-            rv_y = bat1_vel_y - self.ball_v_y
+            n_l = math.sqrt(n_x**2+n_y**2)
+            n_x /= n_l
+            n_y /= n_l
 
-            l = rv_x * tvn_x + tvn_y * rv_y
+            reframe_ball_v_x = self.ball_v_x - bat1_vel_x
+            reframe_ball_v_y = self.ball_v_y - bat1_vel_y
 
-            vcotv_x = tvn_x * l
-            vcotv_y = tvn_y * l
+            dot_product = 2 * (n_x * reframe_ball_v_x + n_y * reframe_ball_v_y)
 
-            vcpttv_x = rv_x - vcotv_x
-            vcpttv_y = rv_y - vcotv_y
+            reframe_ball_v_x -= dot_product * n_x
+            reframe_ball_v_y -= dot_product * n_y
 
-            self.ball_v_x += 2 * vcpttv_x
-            self.ball_v_y += 2 * vcpttv_y
+            self.ball_v_x = reframe_ball_v_x + bat1_vel_x
+            self.ball_v_y = reframe_ball_v_y + bat1_vel_y
 
             # Now move ball the remaining part
             self.ball_x += self.ball_v_x * (time_delta-t)
@@ -272,26 +272,26 @@ class Game:
             self.ball_x += self.ball_v_x * t
             self.ball_y += self.ball_v_y * t
 
-            # Update its velocity (also based on puck position at t)
-            tv_x = (self.bat2_y+bat2_vel_y*t-self.ball_y)
-            tv_y = -(self.bat2_x+bat2_vel_x*t-self.ball_x)
+            bat2_col_x = self.bat2_x + bat2_vel_x*t
+            bat2_col_y = self.bat2_y + bat2_vel_y*t
 
-            tvn_x = tv_x / math.sqrt(tv_x**2+tv_y**2)
-            tvn_y = tv_y / math.sqrt(tv_x**2+tv_y**2)
+            n_x = self.ball_x - bat2_col_x
+            n_y = self.ball_y - bat2_col_y
 
-            rv_x = bat2_vel_x - self.ball_v_x
-            rv_y = bat2_vel_y - self.ball_v_y
+            n_l = math.sqrt(n_x**2+n_y**2)
+            n_x /= n_l
+            n_y /= n_l
 
-            l = rv_x * tvn_x + tvn_y * rv_y
+            reframe_ball_v_x = self.ball_v_x - bat2_vel_x
+            reframe_ball_v_y = self.ball_v_y - bat2_vel_y
 
-            vcotv_x = tvn_x * l
-            vcotv_y = tvn_y * l
+            dot_product = 2 * (n_x * reframe_ball_v_x + n_y * reframe_ball_v_y)
 
-            vcpttv_x = rv_x - vcotv_x
-            vcpttv_y = rv_y - vcotv_y
+            reframe_ball_v_x -= dot_product * n_x
+            reframe_ball_v_y -= dot_product * n_y
 
-            self.ball_v_x += 2 * vcpttv_x
-            self.ball_v_y += 2 * vcpttv_y
+            self.ball_v_x = reframe_ball_v_x + bat2_vel_x
+            self.ball_v_y = reframe_ball_v_y + bat2_vel_y
 
             # Now move ball the remaining part
             self.ball_x += self.ball_v_x * (time_delta-t)
@@ -321,6 +321,7 @@ class Game:
             self.ball_v_y = v_y / time_delta
 
         if self.does_ball_collide_bat2() and self.bat2_timeout == 0:
+            print("PUSH LOGIC")
             v_x = self.ball_x -self.bat2_x
             v_y = self.ball_y -self.bat2_y
             if v_x == 0 and v_y == 0:
