@@ -1,4 +1,4 @@
-from game import GameState, ROOM_W, ROOM_H, BAT_R, BALL_R
+from game import GameState, ROOM_W, ROOM_H
 import math
 from numberBitmaps import Numbers
 
@@ -50,13 +50,13 @@ class Renderer:
 
         if game.state != GameState.GAME_OVER or game.player1_score>game.player2_score:
             c = (0,0,255) if game.bat1_timeout == 0 else (255,255,0)
-            self.draw_sphere(game.bat1_x,game.bat1_y,BAT_R, c)
+            self.draw_sphere(game.bat1_x,game.bat1_y,game.bat_r, c)
 
         if game.state != GameState.GAME_OVER or game.player2_score > game.player1_score:
             c = (255,0,0) if game.bat2_timeout == 0 else (255,255,0)
-            self.draw_sphere(game.bat2_x,game.bat2_y,BAT_R, c)
+            self.draw_sphere(game.bat2_x,game.bat2_y,game.bat_r, c)
 
-        self.draw_sphere(game.ball_x,game.ball_y,BALL_R, (255,255,255))
+        self.draw_sphere(game.ball_x,game.ball_y,game.ball_r, (255,255,255))
 
         if game.state == GameState.SCORE_PAUSE:
             self.draw_number(2,2,Numbers.NumberBitmap[game.player2_score], True)

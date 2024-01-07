@@ -1,4 +1,4 @@
-from game import Game, ROOM_W, ROOM_H, BAT_W, BAT_H, GameState
+from game import Game, ROOM_W, ROOM_H, GameState
 from renderer import Renderer
 from tkinterDriver import ScreenDriver
 from mouseDriver import MouseDriver

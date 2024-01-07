@@ -4,21 +4,27 @@ import random
 from backgrounds import StarBackground, FireBackground, FabricBackground, StartBackground, EndBackground, Star2Background
 from enum import Enum
 
-BAT_W = 4
-BAT_H = 4
-
 BAT_MAX_V = 640
 
-BALL_MAX_V_EASY = 70
+BALL_MAX_V_EASY = 90
 BALL_MAX_V_MEDIUM = 90
-BALL_MAX_V_HARD = 100
+BALL_MAX_V_HARD = 105
 
-FRICTION = 40
+FRICTION_EASY = 30
+FRICTION_MEDIUM = 35
+FRICTION_HARD = 35
 
-BAT_R = 3
-BALL_R = 3.5
+BAT_R_EASY = 4.0
+BALL_R_EASY = 4.0
 
-TIMEOUT_T = 0.5
+BAT_R_MEDIUM = 3.5
+BALL_R_MEDIUM = 3.5
+
+BAT_R_HARD = 3.5
+BALL_R_HARD = 3.5
+
+
+TIMEOUT_T = 0.2
 
 ROOM_W = 32
 ROOM_H = 64
@@ -68,6 +74,9 @@ class Game:
         self.state = GameState.GAME_START
         self.background = StartBackground(ROOM_W, ROOM_H)
 
+        self.ball_r = BALL_R_MEDIUM
+        self.bat_r = BAT_R_MEDIUM
+
         self.bat1_x = 0
         self.bat1_y = 0
         self.bat1_timeout = 0
@@ -80,6 +89,8 @@ class Game:
         self.ball_y = 0
         self.ball_v_x = 0
         self.ball_v_y = 0
+
+        self.friction = 0
 
         self.player1_score = 0
         self.player2_score = 0
@@ -108,18 +119,18 @@ class Game:
         return [(x, int(self.bat2_y)) for x in range(int(self.bat2_x), int(self.bat2_x+BAT_W))]
 
     def does_point_collide_bat(self,x,y):
-        return (x-self.bat1_x)**2+(y-self.bat1_y)**2<BAT_R**2 or (x-self.bat2_x)**2+(y-self.bat2_y)**2<BAT_R**2
+        return (x-self.bat1_x)**2+(y-self.bat1_y)**2<self.bat_r**2 or (x-self.bat2_x)**2+(y-self.bat2_y)**2<self.bat_r**2
 
     def does_point_collide_ball(self,x,y):
-        return (x-self.ball_x)**2+(y-self.ball_y)**2<BALL_R**2
+        return (x-self.ball_x)**2+(y-self.ball_y)**2<self.bat_r**2
 
     def does_ball_collide_bat1(self):
         dist = (self.ball_x - self.bat1_x)**2+(self.ball_y - self.bat1_y)**2
-        return dist<(BALL_R+BAT_R)**2
+        return dist<(self.ball_r+self.bat_r)**2
 
     def does_ball_collide_bat2(self):
         dist = (self.ball_x - self.bat2_x)**2+(self.ball_y - self.bat2_y)**2
-        return dist<(BALL_R+BAT_R)**2
+        return dist<(self.ball_r+self.bat_r)**2
 
     def is_ball_outside_room(self):
         points = self.get_ball_footprint()
@@ -167,13 +178,22 @@ class Game:
             pygame.mixer.Sound.play(start_sound)
             # Play start sound
             if self.bat1_x<ROOM_W/3:
+                self.ball_r = BALL_R_EASY
+                self.bat_r = BAT_R_EASY
                 self.ball_max_v = BALL_MAX_V_EASY
+                self.friction = FRICTION_EASY
                 self.background_pause_c = (0, 200, 0)
             elif self.bat1_x<ROOM_W/3*2:
+                self.ball_r = BALL_R_MEDIUM
+                self.bat_r = BAT_R_MEDIUM
                 self.ball_max_v = BALL_MAX_V_MEDIUM
+                self.friction = FRICTION_MEDIUM
                 self.background_pause_c = (200, 120, 0)
             else:
+                self.ball_r = BALL_R_HARD
+                self.bat_r = BAT_R_HARD
                 self.ball_max_v = BALL_MAX_V_HARD
+                self.friction = FRICTION_HARD
                 self.background_pause_c = (200, 0, 0)
         else:
             self.background_pause_c = (0, 0, 0)
@@ -226,7 +246,7 @@ class Game:
             bat2_vel_y = bat2_vel_y * (BAT_MAX_V/bat2_speed)
 
         vl = math.sqrt(self.ball_v_x**2 + self.ball_v_y**2)
-        ball_new_v = min(vl-FRICTION*time_delta, self.ball_max_v)
+        ball_new_v = min(vl-self.friction*time_delta, self.ball_max_v)
 
         if ball_new_v>0:
             self.ball_v_x = self.ball_v_x * ball_new_v/vl
@@ -235,8 +255,8 @@ class Game:
             self.ball_v_x = 0
             self.ball_v_y = 0
 
-        t_bat1 = self.get_t_of_ball_collision(self.ball_x, self.ball_y, self.ball_v_x, self.ball_v_y, self.bat1_x, self.bat1_y, bat1_vel_x, bat1_vel_y, BAT_R + BALL_R)
-        t_bat2 = self.get_t_of_ball_collision(self.ball_x, self.ball_y, self.ball_v_x, self.ball_v_y, self.bat2_x, self.bat2_y, bat2_vel_x, bat2_vel_y, BAT_R + BALL_R)
+        t_bat1 = self.get_t_of_ball_collision(self.ball_x, self.ball_y, self.ball_v_x, self.ball_v_y, self.bat1_x, self.bat1_y, bat1_vel_x, bat1_vel_y, self.bat_r + self.ball_r)
+        t_bat2 = self.get_t_of_ball_collision(self.ball_x, self.ball_y, self.ball_v_x, self.ball_v_y, self.bat2_x, self.bat2_y, bat2_vel_x, bat2_vel_y, self.bat_r + self.ball_r)
 
         if t_bat1 and t_bat1<time_delta and self.bat1_timeout == 0:
             pygame.mixer.Sound.play(crash_sound)
@@ -321,8 +341,8 @@ class Game:
                 l = math.sqrt(v_x**2+v_y**2)
                 v_x = v_x / l
                 v_y = v_y / l
-            self.ball_x += v_x * (BAT_R+BALL_R+0.01)
-            self.ball_y += v_y * (BAT_R+BALL_R+0.01)
+            self.ball_x += v_x * (self.bat_r+self.ball_r+0.01)
+            self.ball_y += v_y * (self.bat_r+self.ball_r+0.01)
             self.ball_v_x = v_x / time_delta
             self.ball_v_y = v_y / time_delta
 
@@ -336,18 +356,18 @@ class Game:
                 l = math.sqrt(v_x**2+v_y**2)
                 v_x = v_x / l
                 v_y = v_y / l
-            self.ball_x += v_x * (BAT_R+BALL_R+0.01)
-            self.ball_y += v_y * (BAT_R+BALL_R+0.01)
+            self.ball_x += v_x * (self.bat_r+self.ball_r+0.01)
+            self.ball_y += v_y * (self.bat_r+self.ball_r+0.01)
             self.ball_v_x = v_x / time_delta
             self.ball_v_y = v_y / time_delta
 
         # Wall correct
         # Move ball and check for wall
-        if self.ball_x<BALL_R:
-            self.ball_x = BALL_R
+        if self.ball_x<self.ball_r:
+            self.ball_x = self.ball_r
             self.ball_v_x = -self.ball_v_x
-        if self.ball_x>ROOM_W-BALL_R:
-            self.ball_x = ROOM_W-BALL_R
+        if self.ball_x>ROOM_W-self.ball_r:
+            self.ball_x = ROOM_W-self.ball_r
             self.ball_v_x = -self.ball_v_x
 
         # If still colliding, set timeout
@@ -356,7 +376,7 @@ class Game:
         if self.does_ball_collide_bat2():
             self.bat2_timeout = TIMEOUT_T
 
-        if self.ball_y<-BALL_R:
+        if self.ball_y<-self.ball_r:
             self.player2_score += 1
             self.ball_x = 16
             self.ball_y = 16
@@ -371,7 +391,7 @@ class Game:
                 self.ball_x = 1000
                 self.transition_game_over(False)
 
-        if self.ball_y>ROOM_H+BALL_R:
+        if self.ball_y>ROOM_H+self.ball_r:
             self.player1_score += 1
             self.ball_x = 16
             self.ball_y = 64-16
